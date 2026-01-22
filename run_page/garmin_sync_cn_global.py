@@ -50,7 +50,10 @@ if __name__ == "__main__":
     folder = FIT_FOLDER
     # make gpx or tcx dir
     if not os.path.exists(folder):
-        os.mkdir(folder)
+        os.makedirs(folder, exist_ok=True)
+    # Ensure GPX_FOLDER exists as well since it may be used later
+    if not os.path.exists(GPX_FOLDER):
+        os.makedirs(GPX_FOLDER, exist_ok=True)
 
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(
@@ -76,7 +79,8 @@ if __name__ == "__main__":
             to_upload_files.append(os.path.join(GPX_FOLDER, f"{i}.gpx"))
 
     print("Files to sync:" + " ".join(to_upload_files))
-    # FIXME is com ok here?
+    # Use "COM" as auth_domain for global Garmin Connect (non-CN region)
+    # This is correct - "CN" is only used for Garmin China, all other regions use "COM"
     garmin_global_client = Garmin(
         secret_string_global,
         "COM",

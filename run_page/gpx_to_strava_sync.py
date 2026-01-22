@@ -23,22 +23,24 @@ def get_to_generate_files(last_time):
                 try:
                     gpx = mod_gpxpy.parse(r)
                 except Exception as e:
-                    print(f"Something is wring with {file_path} err: {str(e)}")
+                    print(f"Something is wrong with {file_path} err: {str(e)}")
                     continue
                 # if gpx file has no start time we ignore it.
-                if gpx.get_time_bounds()[0]:
+                time_bounds = gpx.get_time_bounds()
+                if time_bounds and time_bounds[0] is not None:
                     gpx_files.append((gpx, file_path))
     gpx_files_dict = {
         int(i[0].get_time_bounds()[0].timestamp()): i[1]
         for i in gpx_files
-        if int(i[0].get_time_bounds()[0].timestamp()) > last_time
+        if i[0].get_time_bounds()[0] is not None
+        and int(i[0].get_time_bounds()[0].timestamp()) > last_time
     }
     return sorted(list(gpx_files_dict.keys())), gpx_files_dict
 
 
 if __name__ == "__main__":
     if not os.path.exists(GPX_FOLDER):
-        os.mkdir(GPX_FOLDER)
+        os.makedirs(GPX_FOLDER, exist_ok=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("client_id", help="strava client id")
     parser.add_argument("client_secret", help="strava client secret")
@@ -59,7 +61,6 @@ if __name__ == "__main__":
     if not options.all:
         last_time = get_strava_last_time(client, is_milliseconds=False)
     to_upload_time_list, to_upload_dict = get_to_generate_files(last_time)
-    index = 1
     print(f"{len(to_upload_time_list)} gpx files is going to upload")
     for i in to_upload_time_list:
         gpx_file = to_upload_dict.get(i)
@@ -73,7 +74,7 @@ if __name__ == "__main__":
             upload_file_to_strava(client, gpx_file, "gpx")
 
         except ActivityUploadFailed as e:
-            print(f"Upload faild error {str(e)}")
+            print(f"Upload failed error {str(e)}")
         # spider rule
         time.sleep(1)
 

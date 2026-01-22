@@ -26,6 +26,7 @@ def get_to_generate_files(last_time):
         int(i[0].trackpoints[0].time.timestamp()): i[1]
         for i in tcx_files
         if len(i[0].trackpoints) > 0
+        and i[0].trackpoints[0].time is not None
         and int(i[0].trackpoints[0].time.timestamp()) > last_time
     }
 
@@ -34,7 +35,7 @@ def get_to_generate_files(last_time):
 
 if __name__ == "__main__":
     if not os.path.exists(TCX_FOLDER):
-        os.mkdir(TCX_FOLDER)
+        os.makedirs(TCX_FOLDER, exist_ok=True)
     parser = argparse.ArgumentParser()
     parser.add_argument("client_id", help="strava client id")
     parser.add_argument("client_secret", help="strava client secret")
@@ -55,7 +56,6 @@ if __name__ == "__main__":
     if not options.all:
         last_time = get_strava_last_time(client, is_milliseconds=False)
     to_upload_time_list, to_upload_dict = get_to_generate_files(last_time)
-    index = 1
     for i in to_upload_time_list:
         tcx_file = to_upload_dict.get(i)
         try:
